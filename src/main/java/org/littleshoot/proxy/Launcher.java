@@ -8,14 +8,12 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.cli.UnrecognizedOptionException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.xml.DOMConfigurator;
 import org.littleshoot.proxy.extras.SelfSignedMitmManager;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 
@@ -43,7 +41,6 @@ public class Launcher {
      *            Any command line arguments.
      */
     public static void main(final String... args) {
-        pollLog4JConfigurationFileIfAvailable();
         LOG.info("Running LittleProxy with args: {}", Arrays.asList(args));
         final Options options = new Options();
         options.addOption(null, OPTION_DNSSEC, true,
@@ -131,13 +128,5 @@ public class Launcher {
 
         final HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("littleproxy", options);
-    }
-
-    private static void pollLog4JConfigurationFileIfAvailable() {
-        File log4jConfigurationFile = new File("src/test/resources/log4j.xml");
-        if (log4jConfigurationFile.exists()) {
-            DOMConfigurator.configureAndWatch(
-                    log4jConfigurationFile.getAbsolutePath(), 15);
-        }
     }
 }

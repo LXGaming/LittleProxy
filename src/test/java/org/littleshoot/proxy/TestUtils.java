@@ -32,8 +32,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.littleshoot.proxy.extras.SelfSignedSslEngineSource;
 
 public class TestUtils {
@@ -110,8 +111,7 @@ public class TestUtils {
             SSLContext sslContext = contextSource.getSslContext();
 
             sslContextFactory.setSslContext(sslContext);
-            SslSocketConnector connector = new SslSocketConnector(
-                    sslContextFactory);
+            ServerConnector connector = new ServerConnector(httpServer, sslContextFactory);
             connector.setPort(0);
             /*
              * <p>Ox: For some reason, on OS X, a non-zero timeout can causes
@@ -125,8 +125,8 @@ public class TestUtils {
              * have to set the handshake timeout and the maxIdleTime to 0 so
              * that the SSLSocket has an infinite timeout.</p>
              */
-            connector.setHandshakeTimeout(0);
-            connector.setMaxIdleTime(0);
+            connector.setStopTimeout(0);
+            connector.setIdleTimeout(0);
             httpServer.addConnector(connector);
         }
 
@@ -185,8 +185,7 @@ public class TestUtils {
             SSLContext sslContext = contextSource.getSslContext();
 
             sslContextFactory.setSslContext(sslContext);
-            SslSocketConnector connector = new SslSocketConnector(
-                    sslContextFactory);
+            ServerConnector connector = new ServerConnector(httpServer, sslContextFactory);
             connector.setPort(0);
             /*
              * <p>Ox: For some reason, on OS X, a non-zero timeout can causes
@@ -200,8 +199,8 @@ public class TestUtils {
              * have to set the handshake timeout and the maxIdleTime to 0 so
              * that the SSLSocket has an infinite timeout.</p>
              */
-            connector.setHandshakeTimeout(0);
-            connector.setMaxIdleTime(0);
+            connector.setStopTimeout(0);
+            connector.setIdleTimeout(0);
             httpServer.addConnector(connector);
         }
 
@@ -222,8 +221,11 @@ public class TestUtils {
      */
     public static int findLocalHttpPort(Server webServer) {
         for (Connector connector : webServer.getConnectors()) {
-            if (!(connector instanceof SslSocketConnector)) {
-                return connector.getLocalPort();
+            if (connector instanceof ServerConnector) {
+                ServerConnector serverConnector = (ServerConnector) connector;
+                if (connector.getConnectionFactory(SslConnectionFactory.class) == null) {
+                    return serverConnector.getLocalPort();
+                }
             }
         }
 
@@ -238,8 +240,11 @@ public class TestUtils {
      */
     public static int findLocalHttpsPort(Server webServer) {
         for (Connector connector : webServer.getConnectors()) {
-            if (connector instanceof SslSocketConnector) {
-                return connector.getLocalPort();
+            if (connector instanceof ServerConnector) {
+                ServerConnector serverConnector = (ServerConnector) connector;
+                if (connector.getConnectionFactory(SslConnectionFactory.class) != null) {
+                    return serverConnector.getLocalPort();
+                }
             }
         }
 
